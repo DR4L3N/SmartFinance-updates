@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +32,8 @@ class Transaction extends Model
      */
     protected $casts = [
         'date' => 'date',
-        'amount' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'category' => TransactionCategory::class
     ];
 
     /**
@@ -40,5 +42,17 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Set the type attribute and handle category for income
+     */
+    public function setTypeAttribute($value)
+    {
+        $this->attributes['type'] = $value;
+
+        if ($value === 'income') {
+            $this->attributes['category'] = TransactionCategory::INCOME->value;
+        }
     }
 }

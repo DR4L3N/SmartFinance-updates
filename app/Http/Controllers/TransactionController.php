@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionCategory;
 use App\Http\Requests\TransactionRequest;
 use App\Models\Transaction;
 use App\Models\User;
@@ -44,7 +45,8 @@ class TransactionController extends Controller
      */
     public function create(): View
     {
-        return view('transactions.create');
+        $categories = TransactionCategory::cases();
+        return view('transactions.create', compact('categories'));
     }
 
     /**
@@ -67,8 +69,9 @@ class TransactionController extends Controller
     public function edit(Transaction $transaction): View
     {
         $this->authorize('update', $transaction);
+        $categories = TransactionCategory::cases();
 
-        return view('transactions.edit', compact('transaction'));
+        return view('transactions.edit', compact('transaction', 'categories'));
     }
 
     /**

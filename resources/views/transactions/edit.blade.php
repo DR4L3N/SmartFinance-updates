@@ -1,3 +1,7 @@
+@php
+    use App\Enums\TransactionCategory;
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -29,11 +33,22 @@
                             <x-input-error class="mt-2" :messages="$errors->get('type')" />
                         </div>
 
-                        <div>
+                        <div id="categoryContainer" style="display: none;">
                             <x-input-label for="category" :value="__('Category')" />
-                            <x-text-input id="category" name="category" type="text" class="mt-1 block w-full" :value="old('category', $transaction->category)" required />
+                            <select id="category" name="category" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm" required>
+                                <option value="">{{ __('Select Category') }}</option>
+                                @foreach($categories as $category)
+                                    @if($category->value !== 'Income')
+                                        <option value="{{ $category->value }}" {{ old('category', $transaction->category?->value) == $category->value ? 'selected' : '' }} title="{{ __(TransactionCategory::getDescriptions()[$category->value] ?? '') }}">
+                                            {{ __($category->value) }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400" id="categoryDescription"></p>
                             <x-input-error class="mt-2" :messages="$errors->get('category')" />
                         </div>
+                        <input type="hidden" id="hiddenCategory" name="category" value="{{ TransactionCategory::INCOME->value }}" disabled>
 
                         <div>
                             <x-input-label for="payment_method" :value="__('Payment Method')" />
@@ -64,4 +79,43 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('type');
+            const categoryContainer = document.getElementById('categoryContainer');
+            const categorySelect = document.getElementById('category');
+            const hiddenCategory = document.getElementById('hiddenCategory');
+            const descriptionElement = document.getElementById('categoryDescription');
+            
+            function handleTypeChange() {
+                const isIncome = typeSelect.value === 'income';
+                categoryContainer.style.display = isIncome ? 'none' : 'block';
+                categorySelect.disabled = isIncome;
+                hiddenCategory.disabled = !isIncome;
+                
+                if (isIncome) {
+                    categorySelect.removeAttribute('required');
+                    hiddenCategory.setAttribute('required', 'required');
+                } else {
+                    categorySelect.setAttribute('required', 'required');
+                    hiddenCategory.removeAttribute('required');
+                }
+            }
+            
+            typeSelect.addEventListener('change', handleTypeChange);
+            
+            categorySelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                descriptionElement.textContent = selectedOption.title || '';
+            });
+
+            // Initial setup
+            handleTypeChange();
+            if (categorySelect.value) {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                descriptionElement.textContent = selectedOption.title || '';
+            }
+        });
+    </script>
 </x-app-layout>
