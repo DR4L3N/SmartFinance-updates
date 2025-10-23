@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.3-cli
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -28,10 +28,22 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy application files
+# Copy your Laravel application
 COPY . .
 
-RUN ./setup.sh
+# Run setup script (configured to run npm, composer, etc.)
+RUN chmod +x setup.sh && ./setup.sh
 
-# Set folder permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Set permissions for Laravel cache and storage
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Expose port 8000 for Laravel's development server
+EXPOSE 8000
+
+# Set environment variables (optional)
+ENV APP_ENV=production
+ENV PORT=8000
+
+# Start Laravel app using artisan serve
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
