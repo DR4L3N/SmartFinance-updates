@@ -12,11 +12,15 @@ RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Install PHP extensions
 RUN docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
+
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && apt-get install -y nodejs
+
+# Clear cache to reduce layer size
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -24,11 +28,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory
+# Copy application files
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --no-interaction --prefer-dist
+RUN ./setup.sh
 
-# Set permissions
+# Set folder permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache

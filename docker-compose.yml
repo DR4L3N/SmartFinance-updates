@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # PHP Service
   app:
     build:
       context: .
@@ -10,26 +7,13 @@ services:
     container_name: smartfinance-app
     restart: unless-stopped
     working_dir: /var/www
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "8000:8000"
     volumes:
       - ./:/var/www
       # Ensure SQLite database persistence
       - ./database:/var/www/database
-    networks:
-      - smartfinance
-
-  # Nginx Service
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: smartfinance-nginx
-    restart: unless-stopped
-    ports:
-      - "8000:80"
-    volumes:
-      - ./:/var/www
-      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
-    networks:
-      - smartfinance
-
-networks:
-  smartfinance:
-    driver: bridge
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_URL=${APP_URL:-http://localhost:8000}
