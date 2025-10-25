@@ -130,8 +130,13 @@
             const trends = @json($transactionTrends);
             const distribution = @json($distributionData);
             const currency = @json($currency ?? '$');
+            const lastTwoMonthTransactions = @json($lastTwoMonthTransactions);
 
-            // Line chart for trends
+            const trendData = lastTwoMonthTransactions.map(t => ({
+                x: new Date(t.date),  // Use actual date for better axis scaling
+                y: parseFloat(t.total) // Ensure numeric precision
+            }));
+
             const trendOptions = {
                 chart: {
                     type: 'line',
@@ -143,18 +148,30 @@
                         enabled: true
                     },
                     background: 'transparent',
+                    zoom: {
+                        enabled: true,
+                        type: 'x',
+                        autoScaleYaxis: true
+                    }
                 },
                 series: [{
-                    name: 'Balance',
-                    data: trends.map(t => t.total)
+                    name: 'Transactions',
+                    data: trendData
                 }],
                 xaxis: {
-                    categories: trends.map(t => t.month),
+                    type: 'datetime',
                     labels: {
+                        datetimeFormatter: {
+                            year: 'yyyy',
+                            month: "MMM 'yy",
+                            day: 'dd MMM',
+                            hour: 'HH:mm'
+                        },
                         style: {
                             colors: '#9ca3af'
                         }
-                    }
+                    },
+                    tooltip: { enabled: true }
                 },
                 yaxis: {
                     labels: {
@@ -167,6 +184,9 @@
                     }
                 },
                 tooltip: {
+                    x: {
+                        format: 'dd MMM yyyy'
+                    },
                     y: {
                         formatter: function (value) {
                             return value.toFixed(2) + ' ' + currency;
@@ -176,13 +196,19 @@
                 colors: ['#0EA5E9'],
                 stroke: {
                     curve: 'smooth',
-                    width: 3
+                    width: 2
                 },
                 theme: {
                     mode: 'dark'
                 },
                 grid: {
                     borderColor: '#374151'
+                },
+                markers: {
+                    size: 4,
+                    colors: ['#0EA5E9'],
+                    strokeColors: '#1E3A8A',
+                    hover: { sizeOffset: 3 }
                 }
             };
 

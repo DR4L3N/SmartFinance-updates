@@ -57,6 +57,11 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
+        $lastTwoMonthTransactions = $user->transactions()
+            ->orderBy('date')
+            ->where('date', '>=', now()->subMonths(2))
+            ->get(['date', 'amount as total']);
+
         // Prepare data for income vs expenses pie chart
         $distributionData = [
             ['label' => 'Income', 'value' => $monthlyIncome],
@@ -93,7 +98,8 @@ class DashboardController extends Controller
             'monthlyIncome',
             'monthlyExpenses',
             'transactionTrends',
-            'distributionData'
+            'distributionData',
+            'lastTwoMonthTransactions'
         ));
     }
 }
