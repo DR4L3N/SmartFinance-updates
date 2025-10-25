@@ -81,9 +81,12 @@ class DashboardController extends Controller
         ];
 
         shuffle($allTips);
-        $tips = array_slice($allTips, 0, 3);
+        $tips = array_slice($allTips, 0, 1);
+
+        $currency = $user->currency;
 
         return view('dashboard', compact(
+            'currency',
             'tips',
             'insights',
             'recentTransactions',

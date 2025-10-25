@@ -52,7 +52,7 @@
 
                         <div>
                             <x-input-label for="amount" :value="__('Amount')" />
-                            <x-text-input id="amount" name="amount" type="number" step="0.01" min="0.01" class="mt-1 block w-full" :value="old('amount', abs($transaction->amount))" required placeholder="Enter amount" />
+                            <x-text-input id="amount" name="amount" type="number" class="mt-1 block w-full" :value="old('amount', abs($transaction->amount))" required placeholder="Enter amount" />
                             <x-input-error class="mt-2" :messages="$errors->get('amount')" />
                         </div>
 

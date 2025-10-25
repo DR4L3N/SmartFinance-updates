@@ -36,8 +36,9 @@ class TransactionController extends Controller
         }
 
         $transactions = $query->paginate(15);
+        $currency = $user->currency;
 
-        return view('transactions.index', compact('transactions', 'sort', 'direction'));
+        return view('transactions.index', compact('transactions', 'sort', 'direction', 'currency'));
     }
 
     /**

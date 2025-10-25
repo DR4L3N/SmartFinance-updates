@@ -17,11 +17,11 @@
                             <div class="grid grid-cols-1 gap-4">
                                 <div>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Income') }}</p>
-                                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($monthlyIncome, 2) }}</p>
+                                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ number_format($monthlyIncome, 2) }} {{$currency}}</p>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Expenses') }}</p>
-                                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ number_format(abs($monthlyExpenses), 2) }}</p>
+                                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ number_format(abs($monthlyExpenses), 2) }} {{$currency}}</p>
                                 </div>
                             </div>
                         </div>
@@ -105,7 +105,7 @@
                                             {{ $transaction->category }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right {{ $transaction->type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                            {{ number_format($transaction->amount, 2) }}
+                                            {{ number_format($transaction->amount, 2) }} {{$currency}}
                                         </td>
                                     </tr>
                                 @empty
@@ -129,6 +129,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const trends = @json($transactionTrends);
             const distribution = @json($distributionData);
+            const currency = @json($currency ?? '$');
 
             // Line chart for trends
             const trendOptions = {
@@ -157,8 +158,18 @@
                 },
                 yaxis: {
                     labels: {
+                        formatter: function (value) {
+                            return value.toFixed(2) + ' ' + currency;
+                        },
                         style: {
                             colors: '#9ca3af'
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (value) {
+                            return value.toFixed(2) + ' ' + currency;
                         }
                     }
                 },
@@ -194,21 +205,24 @@
                 legend: {
                     position: 'bottom',
                     labels: {
-                        colors: '#9ca3af'
+                        colors: '#9ca3af',
+                        formatter: function(label, opts) {
+                            const val = opts.w.globals.series[opts.seriesIndex];
+                            return `${label}: ${val.toFixed(2)} ${currency}`;
+                        }
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (value) {
+                            return value.toFixed(2) + ' ' + currency;
+                        }
                     }
                 },
                 stroke: {
                     show: true,
                     width: 1,
                     colors: 'black'  // Black outline
-                },
-                plotOptions: {
-                    pie: {
-                        expandOnClick: true,
-                        donut: {
-                            size: '65%'
-                        }
-                    }
                 },
                 responsive: [{
                     breakpoint: 480,
@@ -219,7 +233,6 @@
                     }
                 }]
             };
-
             try {
                 const trendsChart = new ApexCharts(document.querySelector("#transactionTrendsChart"), trendOptions);
                 const distributionChart = new ApexCharts(document.querySelector("#distributionChart"), distributionOptions);

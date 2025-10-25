@@ -3,39 +3,33 @@
 namespace App\Services;
 
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class InsightService
 {
-    /**
-     * Generate insights for the user
-     */
     public function generateInsights(int $userId): array
     {
+        $user = User::find($userId);
+        $currency = $user?->currency ?? 'USD';
+
         $allInsights = [
-            $this->safeExecute(fn() => $this->getCategorySpendingChange($userId)),
-            $this->safeExecute(fn() => $this->getHighestSpendingCategory($userId)),
-            $this->safeExecute(fn() => $this->getAverageTransactionAmount($userId)),
+            $this->safeExecute(fn() => $this->getCategorySpendingChange($userId, $currency)),
+            $this->safeExecute(fn() => $this->getHighestSpendingCategory($userId, $currency)),
+            $this->safeExecute(fn() => $this->getAverageTransactionAmount($userId, $currency)),
             $this->safeExecute(fn() => $this->getConsecutiveExpenseDays($userId)),
-            $this->safeExecute(fn() => $this->getBudgetProgress($userId)),
+            $this->safeExecute(fn() => $this->getBudgetProgress($userId, $currency)),
             $this->safeExecute(fn() => $this->getWeekendSpending($userId)),
             $this->safeExecute(fn() => $this->getSavingsRate($userId)),
         ];
 
-        // Filter out null insights and randomly select 2-3
         $validInsights = array_filter($allInsights, fn($insight) => $insight !== null && $insight !== '');
-
-        if (empty($validInsights)) {
-            return [];
-        }
-
-        return $this->randomInsights($validInsights, rand(2, min(3, count($validInsights))));
+        return empty($validInsights)
+            ? []
+            : $this->randomInsights($validInsights, rand(2, min(3, count($validInsights))));
     }
 
-    /**
-     * Safely execute an insight function and catch any errors
-     */
     private function safeExecute(callable $callback): ?string
     {
         try {
@@ -46,35 +40,24 @@ class InsightService
         }
     }
 
-    /**
-     * Get random insights from the collection
-     */
     private function randomInsights(array $insights, int $count): array
     {
         shuffle($insights);
         return array_slice($insights, 0, min($count, count($insights)));
     }
 
-    /**
-     * Compare category spending month-over-month
-     */
-    /**
- * Compare category spending month-over-month
- */
-    private function getCategorySpendingChange(int $userId): ?string
+    private function getCategorySpendingChange(int $userId, string $currency): ?string
     {
         $thisMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
         $lastMonthEnd = $lastMonth->copy()->endOfMonth();
 
-        // Use enum cases instead of strings
         $categories = [
             \App\Enums\TransactionCategory::FOOD,
             \App\Enums\TransactionCategory::TRANSPORTATION,
             \App\Enums\TransactionCategory::ENTERTAINMENT,
             \App\Enums\TransactionCategory::CLOTHING,
         ];
-
         $category = $categories[array_rand($categories)];
         $categoryValue = $category->value;
 
@@ -90,40 +73,24 @@ class InsightService
             ->whereBetween('date', [$lastMonth, $lastMonthEnd])
             ->sum('amount'));
 
-        // Skip if no spending data
         if ($lastMonthSpending == 0 && $thisMonthSpending == 0) {
             return null;
         }
 
-        // Handle case where there was no spending last month
         if ($lastMonthSpending == 0 && $thisMonthSpending > 0) {
-            return "You started spending on " . $categoryValue . " this month ($" . number_format($thisMonthSpending, 2) . ").";
+            return "You started spending on {$categoryValue} this month (" . number_format($thisMonthSpending, 2) . " {$currency}).";
         }
 
-        if ($lastMonthSpending == 0) {
-            return null;
-        }
+        $change = $lastMonthSpending > 0 ? round((($thisMonthSpending - $lastMonthSpending) / $lastMonthSpending) * 100) : 0;
 
-        $change = round((($thisMonthSpending - $lastMonthSpending) / $lastMonthSpending) * 100);
+        if (abs($change) < 5) return null;
 
-        if (abs($change) < 5) {
-            return null; // Ignore small changes
-        }
-
-        if ($change > 0) {
-            return "You spent {$change}% more on " . $categoryValue . " this month compared to last month.";
-        } elseif ($change < 0) {
-            return "Great job! You spent " . abs($change) . "% less on " . $categoryValue . " this month.";
-        }
-
-        return null;
+        return $change > 0
+            ? "You spent {$change}% more on {$categoryValue} this month compared to last month."
+            : "Great job! You spent " . abs($change) . "% less on {$categoryValue} this month.";
     }
 
-
-    /**
-     * Get highest spending category
-     */
-    private function getHighestSpendingCategory(int $userId): ?string
+    private function getHighestSpendingCategory(int $userId, string $currency): ?string
     {
         $topCategory = Transaction::where('user_id', $userId)
             ->where('type', 'expense')
@@ -137,18 +104,15 @@ class InsightService
             return null;
         }
 
-        // Get the enum value or cast to string
         $categoryName = $topCategory->category instanceof \App\Enums\TransactionCategory
             ? $topCategory->category->value
             : $topCategory->category;
 
-        return "Your highest spending category this month is " . $categoryName . " with $" . number_format($topCategory->total, 2) . ".";
+        return "Your highest spending category this month is {$categoryName} with " .
+               number_format($topCategory->total, 2) . " {$currency}.";
     }
 
-    /**
-     * Get average transaction amount
-     */
-    private function getAverageTransactionAmount(int $userId): ?string
+    private function getAverageTransactionAmount(int $userId, string $currency): ?string
     {
         $count = Transaction::where('user_id', $userId)
             ->where('type', 'expense')
@@ -168,12 +132,9 @@ class InsightService
             return null;
         }
 
-        return "Your average expense this month is $" . number_format(abs($average), 2) . " per transaction.";
+        return "Your average expense this month is " . number_format(abs($average), 2) . " {$currency} per transaction.";
     }
 
-    /**
-     * Get consecutive expense days
-     */
     private function getConsecutiveExpenseDays(int $userId): ?string
     {
         $recentExpenses = Transaction::where('user_id', $userId)
@@ -196,13 +157,9 @@ class InsightService
         return null;
     }
 
-    /**
-     * Budget progress insight
-     */
-    private function getBudgetProgress(int $userId): ?string
+    private function getBudgetProgress(int $userId, string $currency): ?string
     {
-        $user = \App\Models\User::find($userId);
-
+        $user = User::find($userId);
         if (!$user || !$user->budget_goal || $user->budget_goal <= 0) {
             return null;
         }
@@ -219,7 +176,8 @@ class InsightService
         $percentage = round(($monthlyExpenses / $user->budget_goal) * 100);
 
         if ($percentage > 100) {
-            return "You've exceeded your budget by " . ($percentage - 100) . "%. Time to cut back!";
+            $over = number_format($monthlyExpenses - $user->budget_goal, 2);
+            return "You've exceeded your budget by {$over} {$currency}! Time to cut back.";
         } elseif ($percentage > 80) {
             return "You've used {$percentage}% of your monthly budget. Watch your spending!";
         } elseif ($percentage > 50) {
@@ -229,9 +187,6 @@ class InsightService
         return null;
     }
 
-    /**
-     * Weekend spending pattern (SQLite compatible)
-     */
     private function getWeekendSpending(int $userId): ?string
     {
         $transactions = Transaction::where('user_id', $userId)
@@ -262,9 +217,6 @@ class InsightService
         return null;
     }
 
-    /**
-     * Savings rate
-     */
     private function getSavingsRate(int $userId): ?string
     {
         $income = Transaction::where('user_id', $userId)
