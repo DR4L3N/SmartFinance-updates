@@ -50,6 +50,52 @@ class TransactionController extends Controller
     }
 
     /**
+     * Export transactions to CSV
+     */
+    public function export(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $transactions = $user->transactions()->orderBy('date', 'desc')->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="transactions.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function() use ($transactions) {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, [
+                'Date',
+                'Type',
+                'Category',
+                'Payment Method',
+                'Amount',
+            ]);
+
+            // Add data rows
+            foreach ($transactions as $transaction) {
+                fputcsv($handle, [
+                    $transaction->date->format('Y-m-d'),
+                    $transaction->type,
+                    $transaction->category->value,
+                    $transaction->payment_method,
+                    number_format($transaction->amount, 2, '.', ''),
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(TransactionRequest $request): RedirectResponse

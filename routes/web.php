@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('transactions', App\Http\Controllers\TransactionController::class)
         ->except(['show']);
+    Route::get('/transactions/export/csv', [App\Http\Controllers\TransactionController::class, 'export'])
+        ->name('transactions.export');
 });
 
 require __DIR__.'/auth.php';
