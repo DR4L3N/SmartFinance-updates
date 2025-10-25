@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\InsightService;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
     /**
      * Show the dashboard.
      */
-    public function index(): View
+    public function index(InsightService $insightService): View
     {
         /** @var User $user */
         $user = Auth::user();
@@ -62,7 +63,29 @@ class DashboardController extends Controller
             ['label' => 'Expenses', 'value' => abs($monthlyExpenses)]
         ];
 
+        $userId = $user->id;
+
+        // Generate random insights
+        $insights = $insightService->generateInsights($userId);
+
+        // Money-saving tips (also randomized)
+        $allTips = [
+            'Set a monthly budget and track your progress.',
+            'Compare prices before you shop.',
+            'Limit impulse purchases by making a shopping list.',
+            'Bring lunch from home instead of buying out.',
+            'Cancel unused subscriptions.',
+            'Use the 24-hour rule before making non-essential purchases.',
+            'Track every expense, no matter how small.',
+            'Set up automatic savings transfers.',
+        ];
+
+        shuffle($allTips);
+        $tips = array_slice($allTips, 0, 3);
+
         return view('dashboard', compact(
+            'tips',
+            'insights',
             'recentTransactions',
             'monthlyIncome',
             'monthlyExpenses',

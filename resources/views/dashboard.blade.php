@@ -7,9 +7,8 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Monthly Overview -->
+            <!-- Monthly Overview and Charts -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Left section: Monthly Overview -->
@@ -25,7 +24,6 @@
                                     <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ number_format(abs($monthlyExpenses), 2) }}</p>
                                 </div>
                             </div>
-
                         </div>
 
                         <!-- Right section: Income vs Expenses chart -->
@@ -36,14 +34,48 @@
                     </div>
                 </div>
 
-
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{{ __('Transaction Trends') }}</h3>
                         <div id="transactionTrendsChart" class="w-full" style="min-height: 300px;"></div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Insights and Tips Section -->
+            <div class="mb-6">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{{ __('Insights') }}</h3>
+
+                    <!-- Dynamic spending insights -->
+                    @if (!empty($insights))
+                        <div class="mb-4 space-y-2">
+                            @foreach ($insights as $insight)
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $insight }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <!-- Money-saving tips -->
+                    <div class="mt-4">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-2">{{ __('Money-Saving Tips') }}</h4>
+                        <ul class="space-y-1">
+                            @foreach ($tips as $tip)
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ $tip }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <!-- Recent Transactions -->
@@ -78,7 +110,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                             {{ __('No recent transactions') }}
                                         </td>
                                     </tr>
