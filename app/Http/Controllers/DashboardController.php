@@ -48,6 +48,11 @@ class DashboardController extends Controller
             ->where('type', 'expense')
             ->sum('amount');
 
+        // Get budget goal and calculate remaining
+        $budgetGoal = $user->buget_goal;
+        $remainingBudget = $budgetGoal ? $budgetGoal - abs($monthlyExpenses) : 0;
+        $budgetPercentage = ($budgetGoal > 0) ? (abs($monthlyExpenses) / $budgetGoal) * 100 : 0;
+
         // Get transaction history for trends (last 6 months)
         $transactionTrends = $user->transactions()
             ->selectRaw("strftime('%Y-%m', date) as month,
@@ -99,7 +104,10 @@ class DashboardController extends Controller
             'monthlyExpenses',
             'transactionTrends',
             'distributionData',
-            'lastTwoMonthTransactions'
+            'lastTwoMonthTransactions',
+            'budgetGoal',
+            'remainingBudget',
+            'budgetPercentage'
         ));
     }
 }
