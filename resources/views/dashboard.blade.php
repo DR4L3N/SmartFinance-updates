@@ -171,14 +171,21 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const trends = @json($transactionTrends);
+            // Get new daily trend data
             const distribution = @json($distributionData);
             const currency = @json($currency ?? '$');
-            const lastTwoMonthTransactions = @json($lastTwoMonthTransactions);
+            const dailyIncome = @json($dailyIncomeTrends);
+            const dailyExpense = @json($dailyExpenseTrends);
 
-            const trendData = lastTwoMonthTransactions.map(t => ({
-                x: new Date(t.date),  // Use actual date for better axis scaling
+            // Process data for Income and Expense series
+            const incomeData = dailyIncome.map(t => ({
+                x: new Date(t.day),  // Use 'day' from our controller query
                 y: parseFloat(t.total) // Ensure numeric precision
+            }));
+
+            const expenseData = dailyExpense.map(t => ({
+                x: new Date(t.day), // Use 'day' from our controller query
+                y: parseFloat(t.total)
             }));
 
             const trendOptions = {
@@ -198,9 +205,13 @@
                         autoScaleYaxis: true
                     }
                 },
+                // Updated Series for two lines
                 series: [{
-                    name: 'Transactions',
-                    data: trendData
+                    name: 'Income',
+                    data: incomeData
+                }, {
+                    name: 'Expenses',
+                    data: expenseData
                 }],
                 xaxis: {
                     type: 'datetime',
@@ -237,7 +248,8 @@
                         }
                     }
                 },
-                colors: ['#0EA5E9'],
+                // Updated colors for Income (Green) and Expenses (Red)
+                colors: ['#22C55E', '#EF4444'],
                 stroke: {
                     curve: 'smooth',
                     width: 2
@@ -250,9 +262,14 @@
                 },
                 markers: {
                     size: 4,
-                    colors: ['#0EA5E9'],
-                    strokeColors: '#1E3A8A',
+                    // Remove series-specific colors
                     hover: { sizeOffset: 3 }
+                },
+                // Add legend to distinguish lines
+                legend: {
+                    labels: {
+                        colors: '#9ca3af'
+                    }
                 }
             };
 

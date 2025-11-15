@@ -62,10 +62,27 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
-        $lastTwoMonthTransactions = $user->transactions()
-            ->orderBy('date')
-            ->where('date', '>=', now()->subMonths(2))
-            ->get(['date', 'amount as total']);
+        $startDate = now()->subMonths(2);
+
+        // Get daily income trends
+        $dailyIncomeTrends = $user->transactions()
+            ->where('type', 'income')
+            ->where('date', '>=', $startDate)
+            ->selectRaw("DATE(date) as day, SUM(amount) as total")
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get();
+
+        // Get daily expense trends
+        $dailyExpenseTrends = $user->transactions()
+            ->where('type', 'expense')
+            ->where('date', '>=', $startDate)
+            // We use ABS() to make the chart values positive
+            ->selectRaw("DATE(date) as day, SUM(ABS(amount)) as total")
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get();
+
 
         // Prepare data for income vs expenses pie chart
         $distributionData = [
@@ -102,12 +119,13 @@ class DashboardController extends Controller
             'recentTransactions',
             'monthlyIncome',
             'monthlyExpenses',
-            'transactionTrends',
+            'transactionTrends', // old
             'distributionData',
-            'lastTwoMonthTransactions',
             'budgetGoal',
             'remainingBudget',
-            'budgetPercentage'
+            'budgetPercentage',
+            'dailyIncomeTrends',
+            'dailyExpenseTrends'
         ));
     }
 }
