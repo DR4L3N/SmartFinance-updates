@@ -43,39 +43,83 @@
             </div>
 
             <!-- Insights and Tips Section -->
-            <div class="mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{{ __('Insights') }}</h3>
-
-                    <!-- Dynamic spending insights -->
-                    @if (!empty($insights))
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{{ __('Insights') }}</h3> @if (!empty($insights))
                         <div class="mb-4 space-y-2">
                             @foreach ($insights as $insight)
                                 <div class="flex items-start">
-                                    <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"> <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                     </svg>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $insight }}</p>
-                                </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $insight }}</p> </div>
                             @endforeach
                         </div>
                     @endif
 
-                    <!-- Money-saving tips -->
                     <div class="mt-4">
-                        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-2">{{ __('Money-Saving Tips') }}</h4>
-                        <ul class="space-y-1">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-100 mb-2">{{ __('Money-Saving Tips') }}</h4> <ul class="space-y-1">
                             @foreach ($tips as $tip)
                                 <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    <svg class="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"> <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ $tip }}</span>
-                                </li>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ $tip }}</span> </li>
                             @endforeach
                         </ul>
                     </div>
                 </div>
+
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{{ __('Budget Tracker') }}</h3>
+
+                    @if ($budgetGoal > 0)
+                        <div classs="space-y-4">
+                            <div class="mb-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Spent') }}</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Goal') }}</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-lg font-bold text-red-600 dark:text-red-400">
+                                        {{ number_format(abs($monthlyExpenses), 2) }} {{$currency}}
+                                    </span>
+                                    <span class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                        {{ number_format($budgetGoal, 2) }} {{$currency}}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-4">
+                                @php
+                                    $progressColor = $budgetPercentage > 100 ? 'bg-red-600' : 'bg-blue-600';
+                                @endphp
+                                <div class="{{ $progressColor }} h-4 rounded-full" style="width: {{ min($budgetPercentage, 100) }}%"></div>
+                            </div>
+
+                            <div class="text-center">
+                                @if ($remainingBudget >= 0)
+                                    <p class="text-lg font-medium text-green-600 dark:text-green-400">
+                                        {{ number_format($remainingBudget, 2) }} {{$currency}} {{ __('Remaining') }}
+                                    </p>
+                                @else
+                                    <p class="text-lg font-medium text-red-600 dark:text-red-400">
+                                        {{ number_format(abs($remainingBudget), 2) }} {{$currency}} {{ __('Over Budget') }}
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                {{ __('You have not set a budget goal.') }}
+                            </p>
+                            <a href="{{ route('preferences.edit') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                {{ __('Set Budget Goal') }}
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
             </div>
 
             <!-- Recent Transactions -->
@@ -127,14 +171,21 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const trends = @json($transactionTrends);
+            // Get new daily trend data
             const distribution = @json($distributionData);
             const currency = @json($currency ?? '$');
-            const lastTwoMonthTransactions = @json($lastTwoMonthTransactions);
+            const dailyIncome = @json($dailyIncomeTrends);
+            const dailyExpense = @json($dailyExpenseTrends);
 
-            const trendData = lastTwoMonthTransactions.map(t => ({
-                x: new Date(t.date),  // Use actual date for better axis scaling
+            // Process data for Income and Expense series
+            const incomeData = dailyIncome.map(t => ({
+                x: new Date(t.day),  // Use 'day' from our controller query
                 y: parseFloat(t.total) // Ensure numeric precision
+            }));
+
+            const expenseData = dailyExpense.map(t => ({
+                x: new Date(t.day), // Use 'day' from our controller query
+                y: parseFloat(t.total)
             }));
 
             const trendOptions = {
@@ -154,9 +205,13 @@
                         autoScaleYaxis: true
                     }
                 },
+                // Updated Series for two lines
                 series: [{
-                    name: 'Transactions',
-                    data: trendData
+                    name: 'Income',
+                    data: incomeData
+                }, {
+                    name: 'Expenses',
+                    data: expenseData
                 }],
                 xaxis: {
                     type: 'datetime',
@@ -193,7 +248,8 @@
                         }
                     }
                 },
-                colors: ['#0EA5E9'],
+                // Updated colors for Income (Green) and Expenses (Red)
+                colors: ['#22C55E', '#EF4444'],
                 stroke: {
                     curve: 'smooth',
                     width: 2
@@ -206,9 +262,14 @@
                 },
                 markers: {
                     size: 4,
-                    colors: ['#0EA5E9'],
-                    strokeColors: '#1E3A8A',
+                    // Remove series-specific colors
                     hover: { sizeOffset: 3 }
+                },
+                // Add legend to distinguish lines
+                legend: {
+                    labels: {
+                        colors: '#9ca3af'
+                    }
                 }
             };
 
