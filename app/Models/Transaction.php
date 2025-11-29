@@ -21,7 +21,8 @@ class Transaction extends Model
         'type',
         'category',
         'amount',
-        'user_id'
+        'user_id',
+        'description'
     ];
 
     /**

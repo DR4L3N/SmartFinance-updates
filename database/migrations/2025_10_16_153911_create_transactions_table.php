@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('category');
             $table->string('payment_method');
             $table->decimal('amount', 10, 2);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

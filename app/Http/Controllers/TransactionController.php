@@ -76,6 +76,7 @@ class TransactionController extends Controller
                 'Type',
                 'Category',
                 'Amount',
+                'Description'
             ]);
 
             // Add data rows
@@ -85,6 +86,7 @@ class TransactionController extends Controller
                     $transaction->type,
                     $transaction->category->value,
                     number_format($transaction->amount, 2, '.', ''),
+                    $transaction->description,
                 ]);
             }
 
